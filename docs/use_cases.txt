@@ -1,0 +1,15 @@
+===== Park Trails Project Use Cases =====
+Diego Gonzalez
+
+The idea for this project is an app that will allow the user to discover park trails, view information on them, and plan trips around them.
+
+The main use cases are as follows. The user should be able to:
+
+- Search for trails by name, or by various filters such as area (park), city, state, length, elevation gain, "popularity" (as provided by the dataset), etc.
+- View the information for a given trail. All the previously mentioned attributes, as well as possibly a description pulled from an external source and some photos as taken by users.
+- Post comments about a trail on its page, as well as view the comments of others
+- Post photos of a trail by attaching them to comments.
+- Upvote or downvote comments for comment quality
+- Make "trail plans", which are collections of trails a user may be planning to visit.
+- Add or remove trails to plans from their page
+- View, edit, and delete trail plans from their page
