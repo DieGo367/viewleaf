@@ -1,0 +1,7 @@
+DROP TABLE Trail;
+DROP TABLE User;
+DROP TABLE Plans;
+DROP TABLE PlanItem;
+DROP TABLE Comment;
+DROP TABLE CommentVote;
+DROP TABLE Photo;
