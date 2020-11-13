@@ -9,3 +9,6 @@ populate:
 
 empty:
 	sqlite3 data.sqlite < empty.sql
+
+run:
+	sqlite3 data.sqlite < statements.sql
