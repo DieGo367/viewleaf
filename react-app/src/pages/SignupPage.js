@@ -1,9 +1,8 @@
 import React from 'react';
 import Cookies from 'js-cookie';
-import Link from '../components/Link';
 import {post} from '../util.js';
 
-export default class LoginPage extends React.Component {
+export default class SignupPage extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -13,7 +12,7 @@ export default class LoginPage extends React.Component {
 	}
 
 	checkLogin = () => {
-		post("/login", {
+		post("/signup", {
 			username: this.state.username,
 			password: this.state.password
 		}).then(data => {
@@ -21,14 +20,16 @@ export default class LoginPage extends React.Component {
 				Cookies.set("username", data.u_name);
 				Cookies.set("password", data.u_password);
 				Cookies.set("userid", data.u_userid);
+				alert("User created successfully!");
+				this.props.history.push("/");
 			}
-			else alert("Incorrect login!");
+			else alert("Failed to create User");
 		});
 	}
 
 	render() {
 		return (<span>
-			<h1>Login</h1>
+			<h1>Signup</h1>
 			<input type="text"
 				value={this.state.username}
 				onChange={e => this.setState({username: e.target.value})}
@@ -37,10 +38,7 @@ export default class LoginPage extends React.Component {
 				value={this.state.password}
 				onChange={e => this.setState({password: e.target.value})}
 			/>
-			<button onClick={this.checkLogin}>Login</button>
-			<p>New user? <Link to="/signup">
-				<button>Signup</button>
-			</Link></p>
+			<button onClick={this.checkLogin}>Submit</button>
 		</span>);
 	}
 }

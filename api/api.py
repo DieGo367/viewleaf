@@ -102,3 +102,31 @@ def login():
 		return user
 	else:
 		return {"success": False}, 404
+
+@app.route('/signup', methods=["POST"])
+def signup():
+	data = request.get_json()
+	if data["username"] and data["password"] and data["username"] != '' and data["password"] != '':
+		conn, c = connect()
+		c.execute("SELECT max(u_userid) FROM User;")
+		max_uid = c.fetchone()[0]
+		if max_uid:
+			uid = max_uid + 1
+		else:
+			uid = 1
+
+		c.execute(
+			"INSERT INTO User(u_userid, u_name, u_password) "
+			"VALUES (?, ?, ?);",
+			(uid, data["username"], data["password"])
+		)
+		conn.commit()
+		conn.close()
+		return {
+			"success": True,
+			"u_name": data["username"],
+			"u_password": data["password"],
+			"u_userid": uid
+		}
+	else:
+		return {"success": False}, 404
