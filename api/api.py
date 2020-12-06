@@ -70,3 +70,17 @@ def get_states():
 			states[state].append(city)
 	conn.close()
 	return states
+
+@app.route('/getTrail/<int:id>')
+def get_trail(id):
+	conn, c = connect(True)
+	c.execute(
+		"SELECT * FROM Trail WHERE t_trailid = ?;",
+		(id,)
+	)
+	trail = c.fetchall()[0]
+	conn.close()
+	if trail:
+		return trail
+	else:
+		return "Not found", 404
