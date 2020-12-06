@@ -4,7 +4,7 @@ export default function Link(props) {
 	let history = useHistory();
 	return (
 		<span
-			class="Link"
+			className="Link"
 			onClick={() => {
 				history.push(props.to);
 			}}

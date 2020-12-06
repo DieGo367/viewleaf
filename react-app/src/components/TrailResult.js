@@ -1,5 +1,5 @@
 export default function TrailResult(props) {
-	return (<div class="TrailResult">
+	return (<div className="TrailResult">
 		<p>{props.data.t_name}</p>
 		<p>{props.data.t_park}</p>
 		<p>{props.data.t_city}, {props.data.t_state}</p>
