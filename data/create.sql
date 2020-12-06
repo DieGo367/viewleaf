@@ -11,7 +11,8 @@ CREATE TABLE Trail (
 
 CREATE TABLE User (
 	u_userid decimal(30,0) PRIMARY KEY,
-	u_name varchar(30) NOT NULL
+	u_name varchar(30) NOT NULL,
+	u_password varchar(30) NOT NULL
 );
 
 CREATE TABLE Plans (

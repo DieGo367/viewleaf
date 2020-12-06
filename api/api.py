@@ -16,7 +16,7 @@ def connect(obj=False):
 		conn.row_factory = dict_factory
 	return conn, conn.cursor()
 
-@app.route('/search',methods=["POST"])
+@app.route('/search', methods=["POST"])
 def search_trail():
 	data = request.get_json()
 	conn, c = connect(True)
@@ -84,3 +84,21 @@ def get_trail(id):
 		return trail
 	else:
 		return "Not found", 404
+
+@app.route('/login', methods=["POST"])
+def login():
+	data = request.get_json()
+	conn, c = connect(True)
+	
+	c.execute(
+		"SELECT * FROM User "
+		"WHERE u_name = ? "
+		"AND u_password = ?;",
+		(data["username"], data["password"])
+	)
+	user = c.fetchone()
+	if user:
+		user["success"] = True
+		return user
+	else:
+		return {"success": False}, 404
