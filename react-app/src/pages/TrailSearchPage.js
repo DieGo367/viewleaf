@@ -1,9 +1,9 @@
 import React from 'react';
-import TrailResult from '../components/TrailResult';
+import TrailSearchResult from '../components/TrailSearchResult';
 import Selector from '../components/Selector';
 import {get, post} from '../util.js';
 
-export default class TrailPage extends React.Component {
+export default class TrailSearchPage extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -55,7 +55,7 @@ export default class TrailPage extends React.Component {
 	
 	renderResults() {
 		return this.state.results.map((result, i) => {
-			return <TrailResult key={i} data={result} />
+			return <TrailSearchResult key={i} data={result} />
 		});
 	}
 
