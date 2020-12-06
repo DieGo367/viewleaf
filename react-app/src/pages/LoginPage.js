@@ -21,6 +21,7 @@ export default class LoginPage extends React.Component {
 				Cookies.set("username", data.u_name);
 				Cookies.set("password", data.u_password);
 				Cookies.set("userid", data.u_userid);
+				this.props.history.push("/");
 			}
 			else alert("Incorrect login!");
 		});

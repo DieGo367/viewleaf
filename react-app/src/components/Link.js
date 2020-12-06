@@ -5,7 +5,8 @@ export default function Link(props) {
 	return (
 		<span
 			className="Link"
-			onClick={() => {
+			onClick={e => {
+				if (typeof props.onClick === "function") props.onClick(e);
 				history.push(props.to);
 			}}
 		>{props.children}</span>
