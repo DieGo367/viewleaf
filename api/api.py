@@ -17,6 +17,13 @@ def connect(obj=False):
 		conn.row_factory = dict_factory
 	return conn, conn.cursor()
 
+def next_id(c):
+	max_id = c.fetchone()[0]
+	if max_id:
+		return max_id + 1
+	else:
+		return 1
+
 @app.route('/search', methods=["POST"])
 def search_trail():
 	data = request.get_json()
@@ -111,11 +118,7 @@ def signup():
 	if data["username"] and data["password"] and data["username"] != '' and data["password"] != '':
 		conn, c = connect()
 		c.execute("SELECT max(u_userid) FROM User;")
-		max_uid = c.fetchone()[0]
-		if max_uid:
-			uid = max_uid + 1
-		else:
-			uid = 1
+		uid = next_id(c)
 
 		c.execute(
 			"INSERT INTO User(u_userid, u_name, u_password) "
@@ -152,11 +155,7 @@ def post_comment():
 	if user:
 		conn, c = connect()
 		c.execute("SELECT max(c_commentid) FROM Comment;")
-		max_cid = c.fetchone()[0]
-		if max_cid:
-			cid = max_cid + 1
-		else:
-			cid = 1
+		cid = next_id(c)
 		if "replyTo" in data.keys():
 			reply_id = data["replyTo"]
 		else:
@@ -169,11 +168,7 @@ def post_comment():
 		)
 		if "photo" in data.keys() and data["photo"] != None:
 			c.execute("SELECT max(ph_photoid) FROM Photo;")
-			max_pid = c.fetchone()[0]
-			if max_pid:
-				pid = max_pid + 1
-			else:
-				pid = 1
+			pid = next_id(c)
 			c.execute(
 				"INSERT INTO Photo(ph_photoid, ph_commentid, ph_userid, ph_trailid, ph_photodata) "
 				"VALUES (?, ?, ?, ?, ?);",
@@ -295,5 +290,44 @@ def commentvote():
 			conn.commit()
 		conn.close()
 		return {"success": True}
+	else:
+		return {"success": False}, 404
+
+@app.route("/newPlan", methods=["POST"])
+def new_plan():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user and data["planName"] != '':
+		conn, c = connect()
+		c.execute("SELECT max(p_planid) FROM Plans;")
+		pid = next_id(c)
+		c.execute(
+			"INSERT INTO Plans(p_planid, p_userid, p_name) "
+			"VALUES (?, ?, ?);",
+			(pid, data["uid"], data["planName"])
+		)
+		conn.commit()
+		conn.close()
+		return {"success": True}
+	else:
+		return {"success": False}, 404
+
+@app.route("/getPlans", methods=["POST"])
+def get_plans():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		conn, c = connect(True)
+		c.execute(
+			"SELECT * FROM Plans "
+			"WHERE p_userid = ?;",
+			(data["uid"],)
+		)
+		plans = c.fetchall()
+		conn.close()
+		return {
+			"success": True,
+			"plans": plans
+		}
 	else:
 		return {"success": False}, 404
