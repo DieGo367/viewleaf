@@ -24,6 +24,13 @@ def next_id(c):
 	else:
 		return 1
 
+def next_ordering(c):
+	max_i = c.fetchone()[0]
+	if max_i:
+		return max_i + 1
+	else:
+		return 0
+
 @app.route('/search', methods=["POST"])
 def search_trail():
 	data = request.get_json()
@@ -324,6 +331,15 @@ def get_plans():
 			(data["uid"],)
 		)
 		plans = c.fetchall()
+		for plan in plans:
+			c.execute(
+				"SELECT count(*) as ct FROM PlanItem "
+				"WHERE pi_planid = ?;",
+				(plan["p_planid"],)
+			)
+			plan["count"] = c.fetchone()["ct"]
+			if plan["count"] == None:
+				plan["count"] = 0
 		conn.close()
 		return {
 			"success": True,
@@ -331,3 +347,39 @@ def get_plans():
 		}
 	else:
 		return {"success": False}, 404
+
+def get_plan(uid, pid):
+	conn, c = connect(True)
+	c.execute(
+		"SELECT * FROM Plans "
+		"WHERE p_planid = ? "
+		"AND p_userid = ?;",
+		(pid, uid)
+	)
+	plan = c.fetchone()
+	conn.close()
+	return plan
+
+@app.route("/addToPlan", methods=["POST"])
+def add_to_plan():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		plan = get_plan(data["uid"], data["pid"])
+		if plan:
+			conn, c = connect()
+			c.execute(
+				"SELECT max(pi_ordering) FROM PlanItem "
+				"WHERE pi_planid = ?;",
+				(data["pid"],)
+			)
+			index = next_ordering(c)
+			c.execute(
+				"INSERT INTO PlanItem(pi_planid, pi_trailid, pi_ordering) "
+				"VALUES(?, ?, ?);",
+				(data["pid"], data["tid"], index)
+			)
+			conn.commit()
+			conn.close()
+			return {"success": True}
+	return {"success": False}

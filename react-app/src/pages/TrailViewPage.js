@@ -1,6 +1,7 @@
 import React from 'react';
 import Cookies from 'js-cookie';
 import Comment from '../components/Comment';
+import Selector from '../components/Selector';
 import {get, post} from '../util.js';
 import './TrailViewPage.css';
 
@@ -14,7 +15,10 @@ export default class TrailViewPage extends React.Component {
 			photos: [],
 
 			commentText: '',
-			photo: null
+			photo: null,
+
+			userPlans: {},
+			plan: ''
 		};
 	}
 
@@ -23,6 +27,21 @@ export default class TrailViewPage extends React.Component {
 			this.setState({trail: data});
 		});
 		this.loadPhotos(true);
+		let userid = Cookies.get("userid");
+		if (userid !== undefined) {
+			post("/getPlans", {
+				uid: userid,
+				password: Cookies.get("password")
+			}).then(data => {
+				if (data.success) {
+					let userPlans = {"-plan-": ''};
+					data.plans.forEach(plan => {
+						userPlans[plan["p_name"]] = plan["p_planid"]
+					});
+					this.setState({userPlans: userPlans});
+				}
+			});
+		}
 	}
 
 	loadPhotos(next) {
@@ -95,6 +114,34 @@ export default class TrailViewPage extends React.Component {
 		}).then(() => this.loadComments());
 	}
 
+	addToPlan = () => {
+		if (this.state.plan != '') {
+			post("/addToPlan", {
+				uid: Cookies.get("userid"),
+				password: Cookies.get("password"),
+				tid: this.state.trailid,
+				pid: this.state.plan
+			}).then(data => {
+				if (data.success) alert("Added!");
+				else alert("Failed to add to plan");
+			})
+		}
+	}
+
+	renderPlanAdder() {
+		if (Cookies.get("userid") !== undefined) {
+			return (<div>
+				<Selector
+					value={this.state.plan}
+					options={this.state.userPlans}
+					onChange={e => this.setState({plan: e.target.value})}
+				/>
+				<button onClick={this.addToPlan}>Add to Plan</button>
+			</div>);
+		}
+		else return null;
+	}
+
 	renderPhotos() {
 		let photos = this.state.photos.map((photo, i) => {
 			let url = "data:image/*;base64," + btoa(photo.ph_photodata);
@@ -157,6 +204,7 @@ export default class TrailViewPage extends React.Component {
 			<p>Length: {this.state.trail.t_length}</p>
 			<p>Elevation Gain: {this.state.trail.t_elevation_gain}</p>
 			<p>Popularity: {this.state.trail.t_popularity}</p>
+			{this.renderPlanAdder()}
 			<h2>Photos</h2>
 			{this.renderPhotos()}
 			<h2>Comments</h2>

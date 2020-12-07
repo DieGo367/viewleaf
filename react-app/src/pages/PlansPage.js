@@ -43,8 +43,12 @@ export default class PlansPage extends React.Component {
 
 	renderPlans() {
 		let plans = this.state.plans.map((plan, i) => {
-			return (<div key={i}>
+			return (<div key={i} style={{
+				border: "5px solid black",
+				margin: "25px"
+			}}>
 				<p>{plan.p_name}</p>
+				<p># Trails: {plan.count}</p>
 			</div>);
 		});
 		return (<div>
