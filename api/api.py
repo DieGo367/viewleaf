@@ -440,3 +440,97 @@ def remove_from_plan():
 			conn.close()
 			return {"success": True}
 	return {"success": False}
+
+@app.route("/moveUpInPlan", methods=["POST"])
+def move_up_in_plan():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		plan = get_plan(data["uid"], data["pid"])
+		if plan:
+			conn, c = connect()
+			c.execute(
+				"SELECT pi_ordering FROM PlanItem "
+				"WHERE pi_planid = ? "
+				"AND pi_trailid = ?;",
+				(data["pid"], data["tid"])
+			)
+			index = c.fetchone()[0]
+			if index > 0:
+				c.execute(
+					"UPDATE PlanItem "
+					"SET pi_ordering = -1 "
+					"WHERE pi_planid = ? "
+					"AND pi_ordering = ?;",
+					(data["pid"], index - 1)
+				)
+				conn.commit()
+				c.execute(
+					"UPDATE PlanItem "
+					"SET pi_ordering = pi_ordering - 1 "
+					"WHERE pi_planid = ? "
+					"AND pi_ordering = ?;",
+					(data["pid"], index)
+				)
+				conn.commit()
+				c.execute(
+					"UPDATE PlanItem "
+					"SET pi_ordering = ? "
+					"WHERE pi_planid = ? "
+					"AND pi_ordering = -1;",
+					(index, data["pid"])
+				)
+				conn.commit()
+				conn.close()
+				return {"success": True}
+	return {"success": False}
+
+@app.route("/moveDownInPlan", methods=["POST"])
+def move_down_in_plan():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		plan = get_plan(data["uid"], data["pid"])
+		if plan:
+			conn, c = connect()
+			c.execute(
+				"SELECT max(pi_ordering) FROM PlanItem "
+				"WHERE pi_planid = ?;",
+				(data["pid"],)
+			)
+			end = next_ordering(c) - 1
+			c.execute(
+				"SELECT pi_ordering FROM PlanItem "
+				"WHERE pi_planid = ? "
+				"AND pi_trailid = ?;",
+				(data["pid"], data["tid"])
+			)
+			index = c.fetchone()[0]
+			if index != end:
+				c.execute(
+					"UPDATE PlanItem "
+					"SET pi_ordering = -1 "
+					"WHERE pi_planid = ? "
+					"AND pi_ordering = ?;",
+					(data["pid"], index + 1)
+				)
+				conn.commit()
+				c.execute(
+					"UPDATE PlanItem "
+					"SET pi_ordering = pi_ordering + 1 "
+					"WHERE pi_planid = ? "
+					"AND pi_ordering = ?;",
+					(data["pid"], index)
+				)
+				conn.commit()
+				c.execute(
+					"UPDATE PlanItem "
+					"SET pi_ordering = ? "
+					"WHERE pi_planid = ? "
+					"AND pi_ordering = -1;",
+					(index, data["pid"])
+				)
+				conn.commit()
+				conn.close()
+				return {"success": True}
+	return {"success": False}

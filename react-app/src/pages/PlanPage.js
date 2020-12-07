@@ -21,7 +21,6 @@ export default class PlanPage extends React.Component {
 	}
 
 	loadPlan() {
-		console.log(this.state.planid)
 		post("/getPlanDetail", {
 			uid: Cookies.get("userid"),
 			password: Cookies.get("password"),
@@ -45,6 +44,30 @@ export default class PlanPage extends React.Component {
 		}
 	}
 
+	moveUp(item) {
+		post("/moveUpInPlan", {
+			uid: Cookies.get("userid"),
+			password: Cookies.get("password"),
+			pid: this.state.planid,
+			tid: item.t_trailid
+		}).then(data => {
+			if (data.success) this.loadPlan();
+			else alert("Failed to move");
+		});
+	}
+
+	moveDown(item) {
+		post("/moveDownInPlan", {
+			uid: Cookies.get("userid"),
+			password: Cookies.get("password"),
+			pid: this.state.planid,
+			tid: item.t_trailid
+		}).then(data => {
+			if (data.success) this.loadPlan();
+			else alert("Failed to move");
+		});
+	}
+
 	renderItems = () => {
 		if (this.state.plan.items) {
 			return this.state.plan.items.map((item, i) => {
@@ -60,6 +83,8 @@ export default class PlanPage extends React.Component {
 					<p>Elevation Gain: {item.t_elevation_gain}</p>
 					<p><Link to={"/trail/"+item.t_trailid}><button>Visit Page</button></Link></p>
 					<p><button onClick={() => {this.remove(item)}}>Remove from Plan</button></p>
+					<p><button onClick={() => {this.moveUp(item)}}>Move Up</button></p>
+					<p><button onClick={() => {this.moveDown(item)}}>Move Down</button></p>
 				</div>);
 			})
 		}
