@@ -5,6 +5,7 @@ export default function Selector(props) {
 	});
 	let change = props.onChange || (e => { });
 	return (<span className="Selector">
+		{props.label}
 		<select value={props.value} onChange={e => change(e)}>
 			{options}
 		</select>

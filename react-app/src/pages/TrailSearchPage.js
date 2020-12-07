@@ -61,24 +61,30 @@ export default class TrailSearchPage extends React.Component {
 
 	render() {
 		return (<span>
-			<input type="text"
-				value={this.state.searchField}
-				onChange={(e) => this.setState({searchField: e.target.value})}
-			/>
-			<Selector
-				label="State"
-				options={this.stateOptions()}
-				value={this.state.state}
-				onChange={e => this.setState({state: e.target.value, city: ''})}
-			/>
-			{this.state.state !== '' ? (
+			<h1>Search Trails</h1>
+			<p>
+				Trail name / park
+				<input type="text"
+					value={this.state.searchField}
+					onChange={(e) => this.setState({searchField: e.target.value})}
+				/>
+			</p>
+			<p>
+				<Selector
+					label="State"
+					options={this.stateOptions()}
+					value={this.state.state}
+					onChange={e => this.setState({state: e.target.value, city: ''})}
+				/>
+			</p>
+			{this.state.state !== '' ? (<p>
 					<Selector
 						label="City"
 						options={this.cityOptions()}
 						value={this.state.city}
 						onChange={e => this.setState({city: e.target.value})}
 					/>
-				) : null
+				</p>) : null
 			}
 			<Selector
 				label="Sort by"
@@ -91,11 +97,13 @@ export default class TrailSearchPage extends React.Component {
 				value={this.state.sort}
 				onChange={e => this.setState({sort: e.target.value})}
 			/>
-			<p>{this.state.isDescending? "Descending" : "Ascending"}</p>
-			<input type="checkbox"
-				value={this.state.isDescending}
-				onChange={e => this.setState({isDescending: e.target.checked})}
-			/>
+			<p>
+				{this.state.isDescending? "Descending" : "Ascending"}
+				<input type="checkbox"
+					value={this.state.isDescending}
+					onChange={e => this.setState({isDescending: e.target.checked})}
+				/>
+			</p>
 
 			<button onClick={this.search}>Search</button>
 			{this.renderResults()}
