@@ -1,0 +1,10 @@
+.TrailViewPage-Photos {
+	height: 25vw;
+	display: flex;
+	overflow-x: scroll;
+}
+
+.Photo {
+	width: auto;
+	height: 100%;
+}

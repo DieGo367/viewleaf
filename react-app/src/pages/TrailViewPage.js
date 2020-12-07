@@ -2,6 +2,7 @@ import React from 'react';
 import Cookies from 'js-cookie';
 import Comment from '../components/Comment';
 import {get, post} from '../util.js';
+import './TrailViewPage.css';
 
 export default class TrailViewPage extends React.Component {
 	constructor(props) {
@@ -9,8 +10,11 @@ export default class TrailViewPage extends React.Component {
 		this.state = {
 			trailid: this.props.match.params.id,
 			trail: {},
+			comments: [],
+			photos: [],
+
 			commentText: '',
-			comments: []
+			photo: null
 		};
 	}
 
@@ -18,7 +22,14 @@ export default class TrailViewPage extends React.Component {
 		get("/getTrail/"+this.state.trailid).then(data => {
 			this.setState({trail: data});
 		});
-		this.loadComments();
+		this.loadPhotos(true);
+	}
+
+	loadPhotos(next) {
+		get("/getTrailPhotos/"+this.state.trailid).then(data => {
+			this.setState({photos: data.photos});
+			if (next) this.loadComments();
+		});
 	}
 
 	loadComments() {
@@ -26,7 +37,15 @@ export default class TrailViewPage extends React.Component {
 		let userid = Cookies.get("userid");
 		if (userid !== undefined) userString = "?userid="+userid;
 		get("/getTrailComments/"+this.state.trailid+userString).then(data => {
-			this.setState({comments: data.comments});
+			let comments = data.comments.map(comment => {
+				this.state.photos.forEach(photo => {
+					if (comment.c_commentid === photo.ph_commentid) {
+						comment.photodata = photo.ph_photodata;
+					}
+				});
+				return comment;
+			});
+			this.setState({comments: comments});
 		});
 	}
 
@@ -36,11 +55,16 @@ export default class TrailViewPage extends React.Component {
 				uid: Cookies.get("userid"),
 				password: Cookies.get("password"),
 				tid: this.state.trailid,
-				text: this.state.commentText
+				text: this.state.commentText,
+				photo: this.state.photo
 			}).then(data => {
 				if (data.success) {
-					this.setState({commentText: ''});
-					this.loadComments();
+					if (this.state.photo) this.loadPhotos(true);
+					else this.loadComments();
+					this.setState({
+						commentText: '',
+						photo: null
+					});
 				}
 				else alert("Failed to post comment");
 			});
@@ -71,16 +95,43 @@ export default class TrailViewPage extends React.Component {
 		}).then(() => this.loadComments());
 	}
 
+	renderPhotos() {
+		let photos = this.state.photos.map((photo, i) => {
+			let url = "data:image/*;base64," + btoa(photo.ph_photodata);
+			return <img key={i} src={url} alt="photo" className="Photo" />;
+		});
+		return (<div className="TrailViewPage-Photos">
+			{photos}
+		</div>)
+	}
+
+	loadFile(photo) {
+		let reader = new FileReader();
+		reader.onload = e => {
+			this.setState({photo: e.target.result})
+		}
+		reader.readAsBinaryString(photo);
+	}
+
 	renderMakeComment() {
 		let userid = Cookies.get("userid");
 		if (userid != null) {
 			let username = Cookies.get("username");
 			return (<span>
 				Write a comment (as {username})
-				<input type="text"
-					value={this.state.commentText}
-					onChange={e => this.setState({commentText: e.target.value})}
-				/>
+				<p>
+					<input type="text"
+						value={this.state.commentText}
+						onChange={e => this.setState({commentText: e.target.value})}
+					/>
+				</p>
+				<p>
+					Add a photo?
+					<input type="file"
+						accept="image/png, image/jpeg"
+						onChange={e => this.loadFile(e.target.files[0])}
+					/>
+				</p>
 				<button onClick={this.postComment}>Post</button>
 			</span>);
 		}
@@ -106,6 +157,8 @@ export default class TrailViewPage extends React.Component {
 			<p>Length: {this.state.trail.t_length}</p>
 			<p>Elevation Gain: {this.state.trail.t_elevation_gain}</p>
 			<p>Popularity: {this.state.trail.t_popularity}</p>
+			<h2>Photos</h2>
+			{this.renderPhotos()}
 			<h2>Comments</h2>
 			{this.renderMakeComment()}
 			{this.renderComments()}

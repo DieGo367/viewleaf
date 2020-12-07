@@ -55,6 +55,7 @@ CREATE TABLE Photo (
 	-- FOREIGN KEY(ph_commentid) REFERENCES Comment(c_commentid),
 	ph_userid decimal(30,0) NOT NULL,
 	-- FOREIGN KEY(ph_userid) REFERENCES User(u_userid),
-	ph_trailid decimal(30,0) NOT NULL
+	ph_trailid decimal(30,0) NOT NULL,
 	-- FOREIGN KEY (ph_trailid) REFERENCES Trail(t_trailid)
+	ph_photodata BLOB NOT NULL
 );

@@ -167,6 +167,18 @@ def post_comment():
 			(cid, data["uid"], data["tid"],
 			datetime.now(), data["text"], reply_id)
 		)
+		if "photo" in data.keys() and data["photo"] != None:
+			c.execute("SELECT max(ph_photoid) FROM Photo;")
+			max_pid = c.fetchone()[0]
+			if max_pid:
+				pid = max_pid + 1
+			else:
+				pid = 1
+			c.execute(
+				"INSERT INTO Photo(ph_photoid, ph_commentid, ph_userid, ph_trailid, ph_photodata) "
+				"VALUES (?, ?, ?, ?, ?);",
+				(pid, cid, data["uid"], data["tid"], data["photo"])
+			)
 		conn.commit()
 		conn.close()
 		return {"success": True}
@@ -228,6 +240,17 @@ def get_trail_comments(id):
 		comment_data(c, comment, user)
 	conn.close()
 	return {"comments": comments}
+
+@app.route("/getTrailPhotos/<int:id>")
+def get_trail_photos(id):
+	conn, c = connect(True)
+	c.execute(
+		"SELECT * FROM Photo "
+		"WHERE ph_trailid = ?;",
+		(id,)
+	)
+	photos = c.fetchall()
+	return {"photos": photos}
 
 @app.route("/commentvote", methods=["POST"])
 def commentvote():
