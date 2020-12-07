@@ -173,8 +173,50 @@ def post_comment():
 	else:
 		return {"success": False}, 404
 
+def comment_data(c, comment, user):
+	# get username of poster
+	c.execute("SELECT u_name FROM User WHERE u_userid = ?;", (comment["c_userid"],))
+	comment["username"] = c.fetchone()["u_name"]
+	# get upvote score
+	c.execute(
+		"SELECT 0+sum(CASE "
+		"	WHEN cv_vote = 'U' THEN 1 "
+		"	WHEN cv_vote = 'D' THEN -1 "
+		"END) AS score "
+		"FROM CommentVote "
+		"WHERE cv_commentid = ?;",
+		(comment["c_commentid"],)
+	)
+	count = c.fetchone()
+	comment["votes"] = count["score"]
+	if comment["votes"] == None:
+		comment["votes"] = 0
+	# if user, check their upvote state
+	if user != None and user != '':
+		c.execute(
+			"SELECT cv_vote FROM CommentVote "
+			"WHERE cv_userid = ? "
+			"AND cv_commentid = ?;",
+			(user, comment["c_commentid"])
+		)
+		vote = c.fetchone()
+		if vote:
+			comment["userVote"] = vote["cv_vote"]
+		else:
+			comment["userVote"] = ''
+	# get replies
+	c.execute(
+		"SELECT * FROM Comment "
+		"WHERE c_trailid = ? AND c_reply_to = ?;",
+		(comment["c_trailid"], comment["c_commentid"])
+	)
+	comment["replies"] = c.fetchall()
+	for reply in comment["replies"]:
+		comment_data(c, reply, user)
+
 @app.route("/getTrailComments/<int:id>")
 def get_trail_comments(id):
+	user = request.args.get("userid")
 	conn, c = connect(True)
 	c.execute(
 		"SELECT * FROM Comment "
@@ -183,16 +225,52 @@ def get_trail_comments(id):
 	)
 	comments = c.fetchall()
 	for comment in comments:
-		c.execute("SELECT u_name FROM User WHERE u_userid = ?;", (comment["c_userid"],))
-		comment["username"] = c.fetchone()["u_name"]
-		c.execute(
-			"SELECT * FROM Comment "
-			"WHERE c_trailid = ? AND c_reply_to = ?;",
-			(id, comment["c_commentid"])
-		)
-		comment["replies"] = c.fetchall()
-		for reply in comment["replies"]:
-			c.execute("SELECT u_name FROM User WHERE u_userid = ?;", (reply["c_userid"],))
-			reply["username"] = c.fetchone()["u_name"]
+		comment_data(c, comment, user)
 	conn.close()
 	return {"comments": comments}
+
+@app.route("/commentvote", methods=["POST"])
+def commentvote():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		conn, c = connect(True)
+		c.execute(
+			"SELECT cv_vote FROM CommentVote "
+			"WHERE cv_userid = ? "
+			"AND cv_commentid = ?;",
+			(data["uid"], data["cid"])
+		)
+		vote = c.fetchone()
+		if vote:
+			previous_vote = vote["cv_vote"]
+			if data["direction"] == previous_vote:
+				# remove vote
+				c.execute(
+					"DELETE FROM CommentVote "
+					"WHERE cv_userid = ? "
+					"AND cv_commentid = ?;",
+					(data["uid"], data["cid"])
+				)
+				conn.commit()
+			else:
+				# update vote
+				c.execute(
+					"UPDATE CommentVote "
+					"SET cv_vote = ? "
+					"WHERE cv_userid = ? "
+					"AND cv_commentid = ?;",
+					(data["direction"], data["uid"], data["cid"])
+				)
+		else:
+			# create vote
+			c.execute(
+				"INSERT INTO CommentVote(cv_commentid, cv_userid, cv_vote) "
+				"VALUES (?, ?, ?);",
+				(data["cid"], data["uid"], data["direction"])
+			)
+			conn.commit()
+		conn.close()
+		return {"success": True}
+	else:
+		return {"success": False}, 404

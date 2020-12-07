@@ -22,7 +22,10 @@ export default class TrailViewPage extends React.Component {
 	}
 
 	loadComments() {
-		get("/getTrailComments/"+this.state.trailid).then(data => {
+		let userString = "";
+		let userid = Cookies.get("userid");
+		if (userid !== undefined) userString = "?userid="+userid;
+		get("/getTrailComments/"+this.state.trailid+userString).then(data => {
 			this.setState({comments: data.comments});
 		});
 	}
@@ -59,6 +62,15 @@ export default class TrailViewPage extends React.Component {
 		}
 	}
 
+	vote(comment, direction) {
+		post("/commentvote", {
+			uid: Cookies.get("userid"),
+			password: Cookies.get("password"),
+			cid: comment.c_commentid,
+			direction: direction
+		}).then(() => this.loadComments());
+	}
+
 	renderMakeComment() {
 		let userid = Cookies.get("userid");
 		if (userid != null) {
@@ -79,8 +91,9 @@ export default class TrailViewPage extends React.Component {
 		return this.state.comments.map((comment, i) => {
 			return (<Comment key={i}
 				data={comment}
-				canReply={Cookies.get("userid") !== undefined}
+				canInteract={Cookies.get("userid") !== undefined}
 				onReply={(comment, message) => this.postReply(comment, message)}
+				onVote={(comment, direction) => this.vote(comment, direction)}
 			/>);
 		});
 	}
