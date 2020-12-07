@@ -19,14 +19,14 @@ def connect(obj=False):
 
 def next_id(c):
 	max_id = c.fetchone()[0]
-	if max_id:
+	if max_id != None:
 		return max_id + 1
 	else:
 		return 1
 
 def next_ordering(c):
 	max_i = c.fetchone()[0]
-	if max_i:
+	if max_i != None:
 		return max_i + 1
 	else:
 		return 0
@@ -378,6 +378,63 @@ def add_to_plan():
 				"INSERT INTO PlanItem(pi_planid, pi_trailid, pi_ordering) "
 				"VALUES(?, ?, ?);",
 				(data["pid"], data["tid"], index)
+			)
+			conn.commit()
+			conn.close()
+			return {"success": True}
+	return {"success": False}
+
+@app.route("/getPlanDetail", methods=["POST"])
+def get_plan_details():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		plan = get_plan(data["uid"], data["pid"])
+		if plan:
+			conn, c = connect(True)
+			c.execute(
+				"SELECT pi_ordering, t_trailid, t_name, t_park, t_city, t_state, t_popularity, t_length, t_elevation_gain "
+				"FROM PlanItem, Trail "
+				"WHERE pi_planid = ? "
+				"AND pi_trailid = t_trailid "
+				"ORDER BY pi_ordering;",
+				(data["pid"],)
+			)
+			items = c.fetchall()
+			plan["items"] = items
+			return {
+				"success": True,
+				"plan": plan
+			}
+	return {"success": False}, 404
+
+@app.route("/removeFromPlan", methods=["POST"])
+def remove_from_plan():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		plan = get_plan(data["uid"], data["pid"])
+		if plan:
+			conn, c = connect()
+			c.execute(
+				"SELECT pi_ordering FROM PlanItem "
+				"WHERE pi_planid = ? "
+				"AND pi_trailid = ?;",
+				(data["pid"], data["tid"])
+			)
+			index = c.fetchone()[0]
+			c.execute(
+				"DELETE FROM PlanItem "
+				"WHERE pi_planid = ? "
+				"AND pi_ordering = ?;",
+				(data["pid"], index)
+			)
+			c.execute(
+				"UPDATE PlanItem "
+				"SET pi_ordering = pi_ordering - 1 "
+				"WHERE pi_planid = ? "
+				"AND pi_ordering > ?;",
+				(data["pid"], index)
 			)
 			conn.commit()
 			conn.close()

@@ -1,5 +1,6 @@
 import React from 'react';
 import Cookies from 'js-cookie';
+import Link from '../components/Link';
 import {post} from '../util.js';
 
 export default class PlansPage extends React.Component {
@@ -47,8 +48,10 @@ export default class PlansPage extends React.Component {
 				border: "5px solid black",
 				margin: "25px"
 			}}>
-				<p>{plan.p_name}</p>
-				<p># Trails: {plan.count}</p>
+				<Link to={"/plan/"+plan.p_planid}>
+					<p>{plan.p_name}</p>
+					<p># Trails: {plan.count}</p>
+				</Link>
 			</div>);
 		});
 		return (<div>
