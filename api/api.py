@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 from flask import Flask
 from flask import request
 
@@ -97,6 +98,7 @@ def login():
 		(data["username"], data["password"])
 	)
 	user = c.fetchone()
+	conn.close()
 	if user:
 		user["success"] = True
 		return user
@@ -130,3 +132,67 @@ def signup():
 		}
 	else:
 		return {"success": False}, 404
+
+def get_user(id, password):
+	conn, c = connect(True)
+	c.execute(
+		"SELECT * FROM User "
+		"WHERE u_userid = ? "
+		"AND u_password = ?;",
+		(id, password)
+	)
+	user = c.fetchone()
+	conn.close()
+	return user
+
+@app.route('/postcomment', methods=["POST"])
+def post_comment():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		conn, c = connect()
+		c.execute("SELECT max(c_commentid) FROM Comment;")
+		max_cid = c.fetchone()[0]
+		if max_cid:
+			cid = max_cid + 1
+		else:
+			cid = 1
+		if "replyTo" in data.keys():
+			reply_id = data["replyTo"]
+		else:
+			reply_id = None
+		c.execute(
+			"INSERT INTO Comment(c_commentid, c_userid, c_trailid, c_date, c_message, c_reply_to) "
+			"VALUES (?, ?, ?, ?, ?, ?);",
+			(cid, data["uid"], data["tid"],
+			datetime.now(), data["text"], reply_id)
+		)
+		conn.commit()
+		conn.close()
+		return {"success": True}
+	else:
+		return {"success": False}, 404
+
+@app.route("/getTrailComments/<int:id>")
+def get_trail_comments(id):
+	conn, c = connect(True)
+	c.execute(
+		"SELECT * FROM Comment "
+		"WHERE c_trailid = ? AND c_reply_to IS NULL ORDER BY c_date DESC;",
+		(id,)
+	)
+	comments = c.fetchall()
+	for comment in comments:
+		c.execute("SELECT u_name FROM User WHERE u_userid = ?;", (comment["c_userid"],))
+		comment["username"] = c.fetchone()["u_name"]
+		c.execute(
+			"SELECT * FROM Comment "
+			"WHERE c_trailid = ? AND c_reply_to = ?;",
+			(id, comment["c_commentid"])
+		)
+		comment["replies"] = c.fetchall()
+		for reply in comment["replies"]:
+			c.execute("SELECT u_name FROM User WHERE u_userid = ?;", (reply["c_userid"],))
+			reply["username"] = c.fetchone()["u_name"]
+	conn.close()
+	return {"comments": comments}

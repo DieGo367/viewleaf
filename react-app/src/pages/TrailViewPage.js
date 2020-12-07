@@ -1,17 +1,87 @@
 import React from 'react';
-import {get} from '../util.js';
+import Cookies from 'js-cookie';
+import Comment from '../components/Comment';
+import {get, post} from '../util.js';
 
 export default class TrailViewPage extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			trail: {}
+			trailid: this.props.match.params.id,
+			trail: {},
+			commentText: '',
+			comments: []
 		};
 	}
 
 	componentDidMount() {
-		get("/getTrail/"+this.props.match.params.id).then(data => {
+		get("/getTrail/"+this.state.trailid).then(data => {
 			this.setState({trail: data});
+		});
+		this.loadComments();
+	}
+
+	loadComments() {
+		get("/getTrailComments/"+this.state.trailid).then(data => {
+			this.setState({comments: data.comments});
+		});
+	}
+
+	postComment = () => {
+		if (this.state.commentText !== '') {
+			post("/postcomment", {
+				uid: Cookies.get("userid"),
+				password: Cookies.get("password"),
+				tid: this.state.trailid,
+				text: this.state.commentText
+			}).then(data => {
+				if (data.success) {
+					this.setState({commentText: ''});
+					this.loadComments();
+				}
+				else alert("Failed to post comment");
+			});
+		}
+	}
+
+	postReply(comment, message) {
+		if (message !== '') {
+			post("/postcomment", {
+				uid: Cookies.get("userid"),
+				password: Cookies.get("password"),
+				tid: this.state.trailid,
+				text: message,
+				replyTo: comment.c_commentid
+			}).then(data => {
+				if (data.success) this.loadComments();
+				else alert("Failed to post reply");
+			})
+		}
+	}
+
+	renderMakeComment() {
+		let userid = Cookies.get("userid");
+		if (userid != null) {
+			let username = Cookies.get("username");
+			return (<span>
+				Write a comment (as {username})
+				<input type="text"
+					value={this.state.commentText}
+					onChange={e => this.setState({commentText: e.target.value})}
+				/>
+				<button onClick={this.postComment}>Post</button>
+			</span>);
+		}
+		else return <p>You must login to post a comment</p>;
+	}
+
+	renderComments() {
+		return this.state.comments.map((comment, i) => {
+			return (<Comment key={i}
+				data={comment}
+				canReply={Cookies.get("userid") !== undefined}
+				onReply={(comment, message) => this.postReply(comment, message)}
+			/>);
 		});
 	}
 
@@ -23,7 +93,9 @@ export default class TrailViewPage extends React.Component {
 			<p>Length: {this.state.trail.t_length}</p>
 			<p>Elevation Gain: {this.state.trail.t_elevation_gain}</p>
 			<p>Popularity: {this.state.trail.t_popularity}</p>
-
+			<h2>Comments</h2>
+			{this.renderMakeComment()}
+			{this.renderComments()}
 		</span>);
 	}
 }
