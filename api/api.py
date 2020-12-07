@@ -534,3 +534,25 @@ def move_down_in_plan():
 				conn.close()
 				return {"success": True}
 	return {"success": False}
+
+@app.route('/deletePlan', methods=["POST"])
+def delete_plan():
+	data = request.get_json()
+	user = get_user(data["uid"], data["password"])
+	if user:
+		plan = get_plan(data["uid"], data["pid"])
+		if plan:
+			conn, c = connect()
+			c.execute(
+				"DELETE FROM PlanItem "
+				"WHERE pi_planid = ?;",
+				(data["pid"],)
+			)
+			c.execute(
+				"DELETE FROM Plans "
+				"WHERE p_planid = ?;",
+				(data["pid"],)
+			)
+			conn.commit()
+			return {"success": True}
+	return {"success": False}, 404

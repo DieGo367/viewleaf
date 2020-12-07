@@ -30,6 +30,19 @@ export default class PlanPage extends React.Component {
 		});
 	}
 
+	deletePlan = () => {
+		if (window.confirm("Delete plan "+this.state.plan.p_name+"?")) {
+			post("/deletePlan", {
+				uid: Cookies.get("userid"),
+				password: Cookies.get("password"),
+				pid: this.state.planid
+			}).then(data => {
+				if (data.success) this.props.history.push("/plans")
+				else alert("Failed to delete");
+			});
+		}
+	}
+
 	remove(item) {
 		if (window.confirm("Remove " + item.t_name + " from your plan?")) {
 			post("/removeFromPlan", {
@@ -94,6 +107,8 @@ export default class PlanPage extends React.Component {
 	render() {
 		return (<span>
 			<h1>{this.state.plan.p_name}</h1>
+			<button onClick={this.deletePlan}>Delete this plan</button>
+			<h3>Trails:</h3>
 			{this.renderItems()}
 		</span>);
 	}
