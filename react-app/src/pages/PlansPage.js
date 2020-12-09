@@ -44,10 +44,7 @@ export default class PlansPage extends React.Component {
 
 	renderPlans() {
 		let plans = this.state.plans.map((plan, i) => {
-			return (<div key={i} style={{
-				border: "5px solid black",
-				margin: "25px"
-			}}>
+			return (<div key={i} className="box">
 				<Link to={"/plan/"+plan.p_planid}>
 					<p>{plan.p_name}</p>
 					<p># Trails: {plan.count}</p>

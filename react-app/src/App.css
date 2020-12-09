@@ -1,3 +1,19 @@
+body {
+  background-color: mediumaquamarine;
+}
+
+.box {
+  border: 5px solid rgb(206, 206, 206);
+  border-radius: 25px;
+  background-color: white;
+  margin: 25px;
+  box-shadow: 2px 10px 10px rgb(146, 146, 146);
+}
+
+input, select {
+  margin: 10px;
+}
+
 .App {
   text-align: center;
 }

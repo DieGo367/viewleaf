@@ -2,6 +2,7 @@
 	height: 25vw;
 	display: flex;
 	overflow-x: scroll;
+	background-color: black;
 }
 
 .Photo {

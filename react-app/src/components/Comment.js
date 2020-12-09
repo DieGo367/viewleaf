@@ -66,10 +66,7 @@ export default class Comment extends React.Component {
 	render() {
 		let comment = this.props.data;
 		return (
-			<div className="Comment" style={{
-				border: "5px solid black",
-				margin: "25px"
-			}}>
+			<div className="Comment" className="box">
 				<h3>{comment.username}</h3>
 				<h4>{comment.c_date}</h4>
 				<p>{comment.c_message}</p>

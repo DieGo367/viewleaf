@@ -84,10 +84,7 @@ export default class PlanPage extends React.Component {
 	renderItems = () => {
 		if (this.state.plan.items) {
 			return this.state.plan.items.map((item, i) => {
-				return (<div key={i} style={{
-					border: "5px solid black",
-					margin: "25px"
-				}}>
+				return (<div key={i} className="box">
 					<p>{item.t_name}</p>
 					<p>{item.t_park}</p>
 					<p>{item.t_city}, {item.t_state}</p>
