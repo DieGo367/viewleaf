@@ -62,7 +62,7 @@ def search_trail():
 		"WHERE t_trailid IS NOT NULL "
 		f"{conditions}"
 		f"{ordering}"
-		"LIMIT 10; ",
+		"LIMIT 50; ",
 		tuple(variables)
 	)
 	results = {"results": c.fetchall()}
